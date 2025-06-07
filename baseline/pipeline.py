@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from app.rag.indexer import build_index
-from app.rag.querier import ask_query
+from baseline.retriever.retriever import build_index
+from baseline.generator.generator import ask_query
 
 app = FastAPI()
 index = build_index()
