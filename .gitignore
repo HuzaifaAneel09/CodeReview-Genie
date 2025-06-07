@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Env/IDE
+.env
+.venv/
+env/
+venv/
+ENV/
+*.swp
+.idea/
+.vscode/
+*.DS_Store
+
+# Conda
+*.conda
+*.lock
+*.yaml
+
+# Logs and output
+*.log
+*.out
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Chroma DB
+chroma_db/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# System
+Thumbs.db
+desktop.ini
