@@ -1,0 +1,5 @@
+PR #42: Added login form. Reviewer: Alice. CI failed due to missing test cases. Discussion ongoing about security concerns.
+
+PR #43: Updated API docs. Reviewer: Bob. Approved and merged.
+
+PR #44: Refactored authentication module. Reviewer: Carol. CI passed. Waiting on one more review.
