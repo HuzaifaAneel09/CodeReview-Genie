@@ -4,6 +4,10 @@ from urllib.parse import urlparse
 from baseline.retriever.retriever import build_index_from_github
 from baseline.generator.generator import ask_query
 from utils.logger import logger
+from utils.metrics import log_metrics
+
+import time
+import uuid
 
 app = FastAPI()
 
@@ -23,23 +27,52 @@ def extract_owner_repo(repo_url: str):
 
 @app.post("/query")
 def query(input: QueryInput):
-    logger.info(f"Received query for repo: {input.repo_url}")
+    request_id = str(uuid.uuid4())
+    start_time = time.time()
+
+    logger.info(f"[{request_id}] Received query for repo: {input.repo_url}")
     try:
         owner, repo = extract_owner_repo(input.repo_url)
-        logger.info(f"Building index for {owner}/{repo}")
+        logger.info(f"[{request_id}] Building index for {owner}/{repo}")
         index, token_counter = build_index_from_github(owner, repo)
 
-        logger.info(f"Asking question: {input.question}")
+        logger.info(f"[{request_id}] Asking question: {input.question}")
         answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
 
-        logger.info(f"Query successful, tokens used: {token_count}, estimated cost: ${cost_usd:.6f}")
+        duration = round(time.time() - start_time, 2)
+        logger.info(f"[{request_id}] Query successful, tokens used: {token_count}, cost: ${cost_usd:.6f}, duration: {duration}s")
+
+        log_metrics({
+            "request_id": request_id,
+            "repo_url": input.repo_url,
+            "question": input.question,
+            "tokens_total": token_count,
+            "cost_usd": round(cost_usd, 6),
+            "latency_seconds": duration,
+            "error": ""
+        })
 
         return {
             "answer": answer,
             "tokens_used": token_count,
-            "estimated_cost_usd": round(cost_usd, 6)
+            "estimated_cost_usd": round(cost_usd, 6),
         }
+
     except Exception as e:
-        logger.error(f"Error while handling query: {str(e)}", exc_info=True)
-        return {"error": str(e)}
+        duration = round(time.time() - start_time, 2)
+        error_msg = str(e)
+        logger.error(f"[{request_id}] Error while handling query: {error_msg}", exc_info=True)
+
+        log_metrics({
+            "request_id": request_id,
+            "repo_url": input.repo_url,
+            "question": input.question,
+            "tokens_total": 0,
+            "cost_usd": 0,
+            "latency_seconds": duration,
+            "error": error_msg
+        })
+
+        return {"error": error_msg}
+
 

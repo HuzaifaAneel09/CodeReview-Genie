@@ -44,3 +44,6 @@ htmlcov/
 # System
 Thumbs.db
 desktop.ini
+
+# Metrics
+metrics.json
