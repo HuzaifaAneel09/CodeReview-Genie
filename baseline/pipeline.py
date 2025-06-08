@@ -27,13 +27,14 @@ def query(input: QueryInput):
     try:
         owner, repo = extract_owner_repo(input.repo_url)
         logger.info(f"Building index for {owner}/{repo}")
-        index = build_index_from_github(owner, repo)
+        index, token_counter = build_index_from_github(owner, repo)  # ✅ now returns 2 values
 
         logger.info(f"Asking question: {input.question}")
-        answer = ask_query(index, input.question)
+        answer, token_count = ask_query(index, input.question, token_counter)
 
-        logger.info(f"Query successful")
-        return {"answer": answer}
+        logger.info(f"Query successful, tokens used: {token_count}")
+        return {"answer": answer, "tokens_used": token_count}
     except Exception as e:
         logger.error(f"Error while handling query: {str(e)}", exc_info=True)
         return {"error": str(e)}
+
