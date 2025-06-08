@@ -27,13 +27,18 @@ def query(input: QueryInput):
     try:
         owner, repo = extract_owner_repo(input.repo_url)
         logger.info(f"Building index for {owner}/{repo}")
-        index, token_counter = build_index_from_github(owner, repo)  # ✅ now returns 2 values
+        index, token_counter = build_index_from_github(owner, repo)
 
         logger.info(f"Asking question: {input.question}")
-        answer, token_count = ask_query(index, input.question, token_counter)
+        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
 
-        logger.info(f"Query successful, tokens used: {token_count}")
-        return {"answer": answer, "tokens_used": token_count}
+        logger.info(f"Query successful, tokens used: {token_count}, estimated cost: ${cost_usd:.6f}")
+
+        return {
+            "answer": answer,
+            "tokens_used": token_count,
+            "estimated_cost_usd": round(cost_usd, 6)
+        }
     except Exception as e:
         logger.error(f"Error while handling query: {str(e)}", exc_info=True)
         return {"error": str(e)}

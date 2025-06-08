@@ -21,8 +21,10 @@ def ask_query(index, query: str, token_counter: TokenCountingHandler):
         completion_tokens = token_counter.completion_llm_token_count
         total_tokens = token_counter.total_llm_token_count
 
+        cost_usd = (prompt_tokens * 0.0001 + completion_tokens * 0.0004)
+
         logger.info(f"Tokens used -> prompt: {prompt_tokens}, completion: {completion_tokens}, total: {total_tokens}")
-        return str(response), total_tokens
+        return str(response), total_tokens, cost_usd
     except Exception as e:
         logger.error(f"Error while querying GPT: {e}", exc_info=True)
         raise
