@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+from utils.cache import get_cached_repo, set_cached_repo
 from utils.logger import logger  # <-- import the logger
 
 load_dotenv()
@@ -55,6 +56,12 @@ def fetch_commits(owner: str, repo: str, pr_number: int):
 
 def fetch_and_format(owner: str, repo: str):
     logger.info(f"Starting to fetch and format PR data for {owner}/{repo}")
+
+    # Check cache
+    cached = get_cached_repo(owner, repo)
+    if cached:
+        return cached
+
     data = []
     prs = fetch_pull_requests(owner, repo)
 
@@ -85,4 +92,9 @@ def fetch_and_format(owner: str, repo: str):
         data.append(text)
     
     logger.info(f"Formatted {len(data)} PR documents for {owner}/{repo}")
+
+    # Cache the result
+    set_cached_repo(owner, repo, data)
+
     return data
+
