@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from urllib.parse import urlparse
 from baseline.retriever.retriever import build_index_from_github
 from baseline.generator.generator import ask_query
+from utils.cache import invalidate_repo_cache
 from utils.logger import logger
 from utils.metrics import log_metrics
 
@@ -74,5 +75,26 @@ def query(input: QueryInput):
         })
 
         return {"error": error_msg}
+    
+@app.post("/webhook")
+async def github_webhook(request: Request):
+    payload = await request.json()
+
+    try:
+        repo = payload.get("repository", {})
+        owner = repo.get("owner", {}).get("login")
+        name = repo.get("name")
+
+        if not owner or not name:
+            logger.warning("Webhook received but owner/repo missing in payload")
+            return {"status": "ignored"}
+
+        logger.info(f"Webhook received. Invalidating cache for: {owner}/{name}")
+        invalidate_repo_cache(owner, name)
+
+        return {"status": "cache invalidated", "repo": f"{owner}/{name}"}
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}", exc_info=True)
+        return {"status": "error", "message": str(e)}
 
 
