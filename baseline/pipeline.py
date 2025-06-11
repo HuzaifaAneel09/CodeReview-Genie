@@ -1,3 +1,4 @@
+from chromadb import PersistentClient
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from urllib.parse import urlparse
@@ -93,10 +94,21 @@ async def github_webhook(request: Request):
             logger.warning("Webhook received but owner/repo missing in payload")
             return {"status": "ignored"}
 
-        logger.info(f"Webhook received. Invalidating cache for: {owner}/{name}")
+        logger.info(f"Webhook received. Invalidating cache and index for: {owner}/{name}")
+
+        # Invalidate Redis cache
         invalidate_repo_cache(owner, name)
 
-        return {"status": "cache invalidated", "repo": f"{owner}/{name}"}
+        # Delete Chroma collection for this repo
+        chroma_client = PersistentClient(path="./chroma_db")
+        collection_name = f"code_review_chunks_{owner}_{name}"
+        try:
+            chroma_client.delete_collection(collection_name)
+            logger.info(f"Deleted Chroma collection: {collection_name}")
+        except Exception as e:
+            logger.warning(f"Chroma collection '{collection_name}' may not exist or failed to delete: {e}")
+
+        return {"status": "cache and index invalidated", "repo": f"{owner}/{name}"}
     except Exception as e:
         logger.error(f"Error processing webhook: {e}", exc_info=True)
         return {"status": "error", "message": str(e)}

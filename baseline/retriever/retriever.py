@@ -10,9 +10,28 @@ from utils.logger import logger
 
 load_dotenv()
 
-def build_index_from_github(owner: str, repo: str):
-    logger.info(f"Fetching and building index for GitHub repo: {owner}/{repo}")
+CHROMA_PATH = "./chroma_db"
 
+def build_index_from_github(owner: str, repo: str):
+    logger.info(f"Checking for existing index for GitHub repo: {owner}/{repo}")
+    collection_name = f"code_review_chunks_{owner}_{repo}"
+
+    token_counter = TokenCountingHandler()
+    callback_manager = CallbackManager([token_counter])
+
+    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    all_collections = [c.name for c in chroma_client.list_collections()]
+
+    if collection_name in all_collections:
+        logger.info(f"Found existing collection '{collection_name}'. Reusing index.")
+        collection = chroma_client.get_collection(collection_name)
+        vector_store = ChromaVectorStore(chroma_collection=collection)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+        index = VectorStoreIndex.from_vector_store(vector_store=vector_store, storage_context=storage_context)
+        return index, token_counter
+
+    logger.info(f"No existing index. Building new index for {owner}/{repo}")
     texts = fetch_and_format(owner, repo)
 
     if not texts:
@@ -20,31 +39,22 @@ def build_index_from_github(owner: str, repo: str):
         raise ValueError(f"No pull request data found for repo: {owner}/{repo}")
 
     documents = [Document(text=t) for t in texts]
-    logger.info(f"Converting {len(documents)} PR entries to documents")
 
-    try:
-        token_counter = TokenCountingHandler()
-        callback_manager = CallbackManager([token_counter])
+    embed_model = OpenAIEmbedding(
+        model="text-embedding-3-small",
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
 
-        chroma_client = chromadb.PersistentClient(path="./chroma_db")
-        collection = chroma_client.get_or_create_collection("code_review_chunks")
-        vector_store = ChromaVectorStore(chroma_collection=collection)
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    collection = chroma_client.get_or_create_collection(collection_name)
+    vector_store = ChromaVectorStore(chroma_collection=collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-        embed_model = OpenAIEmbedding(
-            model="text-embedding-3-small",
-            api_key=os.getenv("OPENAI_API_KEY")
-        )
+    index = VectorStoreIndex.from_documents(
+        documents,
+        storage_context=storage_context,
+        embed_model=embed_model,
+        callback_manager=callback_manager
+    )
 
-        index = VectorStoreIndex.from_documents(
-            documents,
-            storage_context=storage_context,
-            embed_model=embed_model,
-            callback_manager=callback_manager
-        )
-
-        logger.info(f"Index built successfully for {owner}/{repo}")
-        return index, token_counter
-    except Exception as e:
-        logger.error(f"Error building vector index for {owner}/{repo}: {e}", exc_info=True)
-        raise
+    logger.info(f"Index built and stored for {owner}/{repo}")
+    return index, token_counter
