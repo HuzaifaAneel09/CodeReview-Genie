@@ -42,7 +42,8 @@ def build_index_from_github(owner: str, repo: str):
 
     embed_model = OpenAIEmbedding(
         model="text-embedding-3-small",
-        api_key=os.getenv("OPENAI_API_KEY")
+        api_key=os.getenv("OPENAI_API_KEY"),
+        callback_manager=callback_manager
     )
 
     collection = chroma_client.get_or_create_collection(collection_name)
@@ -55,6 +56,9 @@ def build_index_from_github(owner: str, repo: str):
         embed_model=embed_model,
         callback_manager=callback_manager
     )
+
+    embedding_tokens = token_counter.total_embedding_token_count
+    logger.info(f"Embedding tokens used: {embedding_tokens}")
 
     logger.info(f"Index built and stored for {owner}/{repo}")
     return index, token_counter

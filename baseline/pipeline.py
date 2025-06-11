@@ -40,6 +40,7 @@ def query(input: QueryInput):
 
         logger.info(f"[{request_id}] Asking question: {input.question}")
         answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        embedding_tokens = token_counter.total_embedding_token_count
 
         duration = round(time.time() - start_time, 2)
         logger.info(f"[{request_id}] Query successful, tokens used: {token_count}, cost: ${cost_usd:.6f}, duration: {duration}s")
@@ -48,7 +49,9 @@ def query(input: QueryInput):
             "request_id": request_id,
             "repo_url": input.repo_url,
             "question": input.question,
-            "tokens_total": token_count,
+            "embedding_tokens": embedding_tokens,
+            "llm_tokens": token_count,
+            "tokens_total": token_count + embedding_tokens,
             "cost_usd": round(cost_usd, 6),
             "latency_seconds": duration,
             "error": ""
@@ -56,7 +59,9 @@ def query(input: QueryInput):
 
         return {
             "answer": answer,
-            "tokens_used": token_count,
+            "llm_tokens": token_count,
+            "embedding_tokens": embedding_tokens,
+            "tokens_total": token_count + embedding_tokens,
             "estimated_cost_usd": round(cost_usd, 6),
         }
 
@@ -70,6 +75,8 @@ def query(input: QueryInput):
             "repo_url": input.repo_url,
             "question": input.question,
             "tokens_total": 0,
+            "llm_tokens": 0,
+            "embedding_tokens": 0,
             "cost_usd": 0,
             "latency_seconds": duration,
             "error": error_msg
