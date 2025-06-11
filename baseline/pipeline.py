@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from urllib.parse import urlparse
 from baseline.retriever.retriever import build_index_from_github
 from baseline.generator.generator import ask_query
-from utils.cache import invalidate_repo_cache
+from utils.cache import check_redis_connection, invalidate_repo_cache
 from utils.logger import logger
 from utils.metrics import log_metrics
 
@@ -78,6 +78,10 @@ def query(input: QueryInput):
     
 @app.post("/webhook")
 async def github_webhook(request: Request):
+    if not check_redis_connection():
+        logger.error("Webhook blocked: Redis is not available.")
+        return {"status": "error", "message": "Redis is not available."}
+
     payload = await request.json()
 
     try:

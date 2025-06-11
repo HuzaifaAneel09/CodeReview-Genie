@@ -14,6 +14,15 @@ r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 CACHE_TTL = 60 * 60  # 1 hour TTL
 
+
+def check_redis_connection() -> bool:
+    try:
+        return r.ping()
+    except redis.RedisError as e:
+        logger.error(f"Redis connection failed: {e}", exc_info=True)
+        return False
+
+
 def get_cached_repo(owner, repo):
     key = f"repo:{owner}/{repo}"
     try:
