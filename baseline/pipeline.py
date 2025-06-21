@@ -1,10 +1,11 @@
 from chromadb import PersistentClient
-from fastapi import Body, FastAPI, Request
+from fastapi import Body, FastAPI, Query, Request
 from pydantic import BaseModel, HttpUrl
 from urllib.parse import urlparse
+from llama_index.core.callbacks import TokenCountingHandler
 from baseline.retriever.retriever import build_index_from_github
 from baseline.generator.generator import ask_query
-from evaluation.testutils import save_test_entry
+from evaluation.testutils import load_test_entry, save_test_entry
 from specialization.github_client import fetch_commits, fetch_pull_requests
 from utils.cache import check_redis_connection, invalidate_repo_cache
 from utils.logger import logger
@@ -156,6 +157,36 @@ def generate_test_case(repo_url: HttpUrl = Body(..., embed=True)):
         "status": "success",
         "repo": test_entry["repo"],
         "commits_collected": len(all_commits)
+    }
+
+@app.get("/run-test")
+def run_single_test(repo: str = Query(...)):
+    # Loading test data here
+    test_entry = load_test_entry(repo)
+    if not test_entry:
+        return {"status": "error", "message": f"Test data not found for repo '{repo}'"}
+
+    owner, name = repo.split("/")
+    token_counter = TokenCountingHandler()
+    index, _ = build_index_from_github(owner, name)
+
+    # Asking model for commit messages
+    question = "List all commit messages from all PRs."
+    response_text, _, _ = ask_query(index, question, token_counter)
+
+    # Comparing steps done here
+    expected = [c["message"].strip().lower() for c in test_entry["commits"]]
+    predicted = response_text.strip().lower().splitlines()
+
+    matched = [msg for msg in expected if any(msg in line for line in predicted)]
+    match_ratio = round(len(matched) / len(expected), 2)
+
+    return {
+        "repo": repo,
+        "total_commits_expected": len(expected),
+        "total_commits_predicted": len(predicted),
+        "commits_matched": len(matched),
+        "match_ratio": match_ratio
     }
 
 

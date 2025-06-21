@@ -20,3 +20,16 @@ def save_test_entry(entry: dict):
         logger.info(f"Test entry saved for repo: {entry['repo']}")
     except Exception as e:
         logger.error(f"Failed to save test entry: {e}", exc_info=True)
+
+def load_test_entry(repo: str) -> dict:
+    try:
+        with open("evaluation/testset.json", "r", encoding="utf-8") as f:
+            all_tests = json.load(f)
+        for entry in all_tests:
+            if entry["repo"] == repo:
+                return entry
+        return None
+    except Exception as e:
+        logger.error(f"Failed to load test entry: {e}", exc_info=True)
+        return None
+
