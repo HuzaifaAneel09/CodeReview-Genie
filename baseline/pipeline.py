@@ -10,12 +10,20 @@ from specialization.github_client import fetch_commits, fetch_pull_requests
 from utils.cache import check_redis_connection, invalidate_repo_cache
 from utils.logger import logger
 from utils.metrics import log_metrics
+from fastapi.middleware.cors import CORSMiddleware
 
 import time
 import uuid
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or ["http://localhost:5173"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class QueryInput(BaseModel):
     repo_url: str
     question: str
