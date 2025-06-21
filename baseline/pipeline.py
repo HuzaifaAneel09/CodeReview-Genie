@@ -1,9 +1,11 @@
 from chromadb import PersistentClient
-from fastapi import FastAPI, Request
-from pydantic import BaseModel
+from fastapi import Body, FastAPI, Request
+from pydantic import BaseModel, HttpUrl
 from urllib.parse import urlparse
 from baseline.retriever.retriever import build_index_from_github
 from baseline.generator.generator import ask_query
+from evaluation.testutils import save_test_entry
+from specialization.github_client import fetch_commits, fetch_pull_requests
 from utils.cache import check_redis_connection, invalidate_repo_cache
 from utils.logger import logger
 from utils.metrics import log_metrics
@@ -119,5 +121,41 @@ async def github_webhook(request: Request):
     except Exception as e:
         logger.error(f"Error processing webhook: {e}", exc_info=True)
         return {"status": "error", "message": str(e)}
+    
+
+@app.post("/generate-test")
+def generate_test_case(repo_url: HttpUrl = Body(..., embed=True)):
+    parsed = urlparse(str(repo_url))
+    try:
+        owner, repo = parsed.path.strip("/").split("/", 1)
+    except ValueError:
+        raise ValueError("Invalid GitHub URL format")
+
+    prs = fetch_pull_requests(owner, repo, state="open", per_page=20)
+    if not prs:
+        return {"status": "skipped", "reason": "No open PRs found."}
+
+    all_commits = []
+    for pr in prs:
+        pr_commits = fetch_commits(owner, repo, pr["number"])
+        for commit in pr_commits:
+            all_commits.append({
+                "message": commit["commit"]["message"],
+                "author": commit["commit"]["author"]["name"]
+            })
+
+    test_entry = {
+        "repo": f"{owner}/{repo}",
+        "total_commits": len(all_commits),
+        "commits": all_commits
+    }
+
+    save_test_entry(test_entry)
+
+    return {
+        "status": "success",
+        "repo": test_entry["repo"],
+        "commits_collected": len(all_commits)
+    }
 
 
