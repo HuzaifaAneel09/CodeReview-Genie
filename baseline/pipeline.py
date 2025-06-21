@@ -161,7 +161,7 @@ def generate_test_case(repo_url: HttpUrl = Body(..., embed=True)):
 
 @app.get("/run-test")
 def run_single_test(repo: str = Query(...)):
-    # Loading test data here
+    # Loading test data
     test_entry = load_test_entry(repo)
     if not test_entry:
         return {"status": "error", "message": f"Test data not found for repo '{repo}'"}
@@ -170,23 +170,33 @@ def run_single_test(repo: str = Query(...)):
     token_counter = TokenCountingHandler()
     index, _ = build_index_from_github(owner, name)
 
-    # Asking model for commit messages
+    # Asking the model
     question = "List all commit messages from all PRs."
     response_text, _, _ = ask_query(index, question, token_counter)
 
-    # Comparing steps done here
+    # Compairing here
     expected = [c["message"].strip().lower() for c in test_entry["commits"]]
     predicted = response_text.strip().lower().splitlines()
 
-    matched = [msg for msg in expected if any(msg in line for line in predicted)]
-    match_ratio = round(len(matched) / len(expected), 2)
+    unmatched = []
+    matched_count = 0
+    for msg in expected:
+        found = any(msg in line for line in predicted)
+        if found:
+            matched_count += 1
+        unmatched.append({
+            "expected": msg,
+            "found": found
+        })
 
     return {
         "repo": repo,
         "total_commits_expected": len(expected),
         "total_commits_predicted": len(predicted),
-        "commits_matched": len(matched),
-        "match_ratio": match_ratio
+        "commits_matched": matched_count,
+        "match_ratio": round(matched_count / len(expected), 2),
+        "unmatched_commits": unmatched,
     }
+
 
 
