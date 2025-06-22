@@ -1,6 +1,7 @@
+import json
 from chromadb import PersistentClient
 from fastapi import Body, FastAPI, HTTPException, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 import httpx
 from pydantic import BaseModel, HttpUrl
 from urllib.parse import urlparse
@@ -253,7 +254,8 @@ async def github_callback(code: str):
         )
         user_data = user_response.json()
 
-    return {
+    # Use postMessage to send data to parent window
+    auth_data = {
         "access_token": access_token,
         "user": {
             "login": user_data.get("login"),
@@ -261,6 +263,37 @@ async def github_callback(code: str):
             "avatar_url": user_data.get("avatar_url")
         }
     }
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><title>Authorization Success</title></head>
+    <body>
+        <script>
+            const authData = {json.dumps(auth_data)};
+            
+            // Send message to parent window
+            if (window.opener) {{
+                window.opener.postMessage({{
+                    type: 'GITHUB_AUTH_SUCCESS',
+                    data: authData
+                }}, '*');
+            }}
+            
+            // Close the popup
+            setTimeout(() => {{
+                window.close();
+            }}, 1000);
+        </script>
+        <div style="text-align: center; font-family: Arial, sans-serif; padding: 50px;">
+            <h2>✅ Authorization Successful!</h2>
+            <p>This window will close automatically...</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
 
 class AuthQueryInput(BaseModel):
     owner: str
