@@ -2,24 +2,37 @@ import requests
 import os
 from dotenv import load_dotenv
 from utils.cache import get_cached_repo, set_cached_repo
-from utils.logger import logger  # <-- import the logger
+from utils.logger import logger
 
 load_dotenv()
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 HEADERS = {
     "Accept": "application/vnd.github+json"
 }
+
 if GITHUB_TOKEN:
     HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
-def fetch_pull_requests(owner: str, repo: str, state="open", per_page=10):
+def build_headers(access_token=None):
+    headers = {
+        "Accept": "application/vnd.github+json"
+    }
+    if access_token:
+        headers["Authorization"] = f"Bearer {access_token}"
+    elif GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return headers
+
+def fetch_pull_requests(owner: str, repo: str, state="open", per_page=10, access_token=None):
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
     params = {"state": state, "per_page": per_page}
+    headers = build_headers(access_token)
     logger.info(f"Fetching pull requests for {owner}/{repo} with state='{state}'")
 
     try:
-        response = requests.get(url, headers=HEADERS, params=params)
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         prs = response.json()
         logger.info(f"Fetched {len(prs)} PRs from {owner}/{repo}")
@@ -28,11 +41,12 @@ def fetch_pull_requests(owner: str, repo: str, state="open", per_page=10):
         logger.error(f"Failed to fetch PRs: {e}", exc_info=True)
         raise
 
-def fetch_comments(owner: str, repo: str, pr_number: int):
+def fetch_comments(owner: str, repo: str, pr_number: int, access_token=None):
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
+    headers = build_headers(access_token)
     logger.info(f"Fetching comments for PR #{pr_number} in {owner}/{repo}")
     try:
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         comments = response.json()
         logger.info(f"Fetched {len(comments)} comments for PR #{pr_number}")
@@ -41,11 +55,12 @@ def fetch_comments(owner: str, repo: str, pr_number: int):
         logger.error(f"Failed to fetch comments for PR #{pr_number}: {e}", exc_info=True)
         raise
 
-def fetch_commits(owner: str, repo: str, pr_number: int):
+def fetch_commits(owner: str, repo: str, pr_number: int, access_token=None):
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/commits"
+    headers = build_headers(access_token)
     logger.info(f"Fetching commits for PR #{pr_number} in {owner}/{repo}")
     try:
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         commits = response.json()
         logger.info(f"Fetched {len(commits)} commits for PR #{pr_number}")
@@ -54,7 +69,7 @@ def fetch_commits(owner: str, repo: str, pr_number: int):
         logger.error(f"Failed to fetch commits for PR #{pr_number}: {e}", exc_info=True)
         raise
 
-def fetch_and_format(owner: str, repo: str):
+def fetch_and_format(owner: str, repo: str, access_token=None):
     logger.info(f"Starting to fetch and format PR data for {owner}/{repo}")
 
     # Check cache
@@ -63,7 +78,7 @@ def fetch_and_format(owner: str, repo: str):
         return cached
 
     data = []
-    prs = fetch_pull_requests(owner, repo)
+    prs = fetch_pull_requests(owner, repo, access_token=access_token)
 
     if not prs:
         logger.warning(f"No PRs found for {owner}/{repo}")
@@ -74,8 +89,8 @@ def fetch_and_format(owner: str, repo: str):
         title = pr["title"]
         author = pr["user"]["login"]
         body = pr.get("body", "")
-        comments = fetch_comments(owner, repo, pr_number)
-        commits = fetch_commits(owner, repo, pr_number)
+        comments = fetch_comments(owner, repo, pr_number, access_token=access_token)
+        commits = fetch_commits(owner, repo, pr_number, access_token=access_token)
 
         text = f"PR #{pr_number}: {title}\nAuthor: {author}\n{body}\n"
 

@@ -12,7 +12,7 @@ load_dotenv()
 
 CHROMA_PATH = "./chroma_db"
 
-def build_index_from_github(owner: str, repo: str):
+def build_index_from_github(owner: str, repo: str, access_token: str = None):
     logger.info(f"Checking for existing index for GitHub repo: {owner}/{repo}")
     collection_name = f"code_review_chunks_{owner}_{repo}"
 
@@ -32,7 +32,7 @@ def build_index_from_github(owner: str, repo: str):
         return index, token_counter
 
     logger.info(f"No existing index. Building new index for {owner}/{repo}")
-    texts = fetch_and_format(owner, repo)
+    texts = fetch_and_format(owner, repo, access_token=access_token)
 
     if not texts:
         logger.warning(f"No PR data found for {owner}/{repo}")

@@ -262,4 +262,59 @@ async def github_callback(code: str):
         }
     }
 
+class AuthQueryInput(BaseModel):
+    owner: str
+    repo: str
+    question: str
+    access_token: str
+
+@app.post("/query/auth")
+def query_with_auth(input: AuthQueryInput):
+    request_id = str(uuid.uuid4())
+    start_time = time.time()
+
+    try:
+        logger.info(f"[{request_id}] Received AUTH query for {input.owner}/{input.repo}")
+        
+        index, token_counter = build_index_from_github(
+            owner=input.owner,
+            repo=input.repo,
+            access_token=input.access_token
+        )
+        
+        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        embedding_tokens = token_counter.total_embedding_token_count
+
+        duration = round(time.time() - start_time, 2)
+        logger.info(f"[{request_id}] AUTH query successful: tokens={token_count}, cost=${cost_usd:.6f}, duration={duration}s")
+
+        log_metrics({
+            "request_id": request_id,
+            "repo_url": f"{input.owner}/{input.repo}",
+            "question": input.question,
+            "embedding_tokens": embedding_tokens,
+            "llm_tokens": token_count,
+            "tokens_total": token_count + embedding_tokens,
+            "cost_usd": round(cost_usd, 6),
+            "latency_seconds": duration,
+            "auth_used": True,
+            "error": ""
+        })
+
+        return {
+            "answer": answer,
+            "llm_tokens": token_count,
+            "embedding_tokens": embedding_tokens,
+            "tokens_total": token_count + embedding_tokens,
+            "estimated_cost_usd": round(cost_usd, 6),
+        }
+
+    except Exception as e:
+        duration = round(time.time() - start_time, 2)
+        logger.error(f"[{request_id}] AUTH query failed: {e}", exc_info=True)
+        return {
+            "error": str(e),
+            "latency_seconds": duration,
+            "request_id": request_id
+        }
 
