@@ -1,5 +1,7 @@
 from chromadb import PersistentClient
-from fastapi import Body, FastAPI, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
+import httpx
 from pydantic import BaseModel, HttpUrl
 from urllib.parse import urlparse
 from llama_index.core.callbacks import TokenCountingHandler
@@ -11,15 +13,23 @@ from utils.cache import check_redis_connection, invalidate_repo_cache
 from utils.logger import logger
 from utils.metrics import log_metrics
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from dotenv import load_dotenv
 
 import time
 import uuid
 
 app = FastAPI()
 
+load_dotenv()
+
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+GITHUB_CALLBACK_URL = "http://localhost:8000/auth/github/callback"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or ["http://localhost:5173"]
+    allow_origins=["*"],  # Or I can just do this if security issues ["http://localhost:5173"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -206,5 +216,50 @@ def run_single_test(repo: str = Query(...)):
         "unmatched_commits": unmatched,
     }
 
+# 1. Redirect user to GitHub login
+@app.get("/auth/github")
+def github_login():
+    github_auth_url = (
+        "https://github.com/login/oauth/authorize"
+        f"?client_id={GITHUB_CLIENT_ID}&redirect_uri={GITHUB_CALLBACK_URL}&scope=repo"
+    )
+    return RedirectResponse(github_auth_url)
+
+# 2. GitHub redirects back here with a code
+@app.get("/auth/github/callback")
+async def github_callback(code: str):
+    async with httpx.AsyncClient() as client:
+        # Exchange code for access token
+        token_response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": GITHUB_CALLBACK_URL
+            }
+        )
+
+        token_data = token_response.json()
+        access_token = token_data.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="GitHub login failed")
+
+        user_response = await client.get(
+            "https://api.github.com/user",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        user_data = user_response.json()
+
+    return {
+        "access_token": access_token,
+        "user": {
+            "login": user_data.get("login"),
+            "name": user_data.get("name"),
+            "avatar_url": user_data.get("avatar_url")
+        }
+    }
 
 

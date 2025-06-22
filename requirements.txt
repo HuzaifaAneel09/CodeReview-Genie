@@ -6,3 +6,4 @@ chromadb
 python-dotenv
 llama-index-vector-stores-chroma
 redis
+httpx
