@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function QueryPage() {
   const [repoUrl, setRepoUrl] = useState("");
@@ -7,6 +7,105 @@ function QueryPage() {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState("");
   const [isVisible] = useState(true);
+  const [selectedRepo, setSelectedRepo] = useState("");
+
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    user: null,
+    accessToken: null,
+    userRepos: [],
+  });
+  const [inputMethod, setInputMethod] = useState("github"); // 'github' | 'manual'
+  const [loadingAuth, setLoadingAuth] = useState(false);
+  const [loadingRepos, setLoadingRepos] = useState(false);
+
+  const handleGitHubAuth = () => {
+    setLoadingAuth(true);
+    const popup = window.open(
+      "http://localhost:8000/auth/github",
+      "github-auth",
+      "width=600,height=700,scrollbars=yes,resizable=yes"
+    );
+
+    // Listen for messages from popup
+    const handleMessage = (event) => {
+      if (event.data.type === "GITHUB_AUTH_SUCCESS") {
+        const authData = event.data.data;
+
+        // Save to localStorage
+        localStorage.setItem("github_auth", JSON.stringify(authData));
+
+        // Update state
+        setAuthState({
+          isAuthenticated: true,
+          user: authData.user,
+          accessToken: authData.access_token,
+          userRepos: [],
+        });
+
+        // Fetch repos
+        fetchUserRepos(authData.access_token);
+
+        // Clean up
+        window.removeEventListener("message", handleMessage);
+        setLoadingAuth(false);
+        popup.close();
+      }
+    };
+
+    // Add message listener
+    window.addEventListener("message", handleMessage);
+
+    // Fallback: check if popup was closed manually
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        window.removeEventListener("message", handleMessage);
+        setLoadingAuth(false);
+      }
+    }, 1000);
+  };
+
+  const fetchUserRepos = async (accessToken) => {
+    setLoadingRepos(true);
+    try {
+      const response = await fetch(
+        "https://api.github.com/user/repos?per_page=100",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        }
+      );
+      const repos = await response.json();
+      setAuthState((prev) => ({
+        ...prev,
+        userRepos: repos.filter((repo) => !repo.fork), // Filter out forked repos
+      }));
+    } catch (error) {
+      console.error("Failed to fetch repos:", error);
+    } finally {
+      setLoadingRepos(false);
+    }
+  };
+
+  const handleRepoSelect = (repoFullName) => {
+    setSelectedRepo(repoFullName);
+    setRepoUrl(`https://github.com/${repoFullName}`);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("github_auth");
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      accessToken: null,
+      userRepos: [],
+    });
+    setInputMethod("manual");
+    setRepoUrl("");
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -14,11 +113,35 @@ function QueryPage() {
     setResponse(null);
 
     try {
-      const res = await fetch("http://localhost:8000/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo_url: repoUrl, question }),
-      });
+      let res;
+
+      // Use authenticated endpoint if user is logged in via GitHub
+      if (
+        authState.isAuthenticated &&
+        inputMethod === "github" &&
+        selectedRepo
+      ) {
+        // Use selectedRepo directly instead of parsing URL
+        const [owner, repo] = selectedRepo.split("/");
+
+        res = await fetch("http://localhost:8000/query/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            owner: owner,
+            repo: repo,
+            question: question,
+            access_token: authState.accessToken,
+          }),
+        });
+      } else {
+        // Use regular endpoint for manual URL input
+        res = await fetch("http://localhost:8000/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repo_url: repoUrl, question }),
+        });
+      }
 
       const data = await res.json();
 
@@ -28,11 +151,30 @@ function QueryPage() {
         setResponse(data.answer);
       }
     } catch (err) {
-      setError("Something went wrong.", err);
+      setError("Something went wrong: " + err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("github_auth");
+    if (savedAuth) {
+      try {
+        const authData = JSON.parse(savedAuth);
+        setAuthState({
+          isAuthenticated: true,
+          user: authData.user,
+          accessToken: authData.access_token,
+          userRepos: [],
+        });
+        fetchUserRepos(authData.access_token);
+      } catch (error) {
+        console.error("Failed to parse saved auth:", error);
+        localStorage.removeItem("github_auth");
+      }
+    }
+  }, []);
 
   const exampleQuestions = [
     "What are the top commits in this repository?",
@@ -113,37 +255,175 @@ function QueryPage() {
                 : "translate-y-10 opacity-0"
             }`}
           >
-            {/* Repository URL Input */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
-                <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                GitHub Repository URL
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="https://github.com/username/repository"
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                  className="w-full px-4 py-4 pl-12 rounded-xl bg-gray-900/50 border border-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
-                />
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
+            {/* Input Method Toggle */}
+            <div className="flex space-x-4 mb-6">
+              <button
+                onClick={() => setInputMethod("github")}
+                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                  inputMethod === "github"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:text-white"
+                }`}
+              >
+                🔐 GitHub Auth
+              </button>
+              <button
+                onClick={() => setInputMethod("manual")}
+                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                  inputMethod === "manual"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:text-white"
+                }`}
+              >
+                🔗 Manual URL
+              </button>
             </div>
 
-            {/* Question Input */}
+            {/* GitHub Authentication Section */}
+            {inputMethod === "github" && (
+              <div className="space-y-4">
+                {!authState.isAuthenticated ? (
+                  <div className="text-center p-8 rounded-xl bg-gray-900/50 border border-gray-700/50">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      Connect with GitHub
+                    </h3>
+                    <p className="text-gray-400 mb-6">
+                      Access your repositories and get personalized insights
+                    </p>
+                    <button
+                      onClick={handleGitHubAuth}
+                      disabled={loadingAuth}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
+                    >
+                      {loadingAuth ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block"></div>
+                          Connecting...
+                        </>
+                      ) : (
+                        "🚀 Authorize with GitHub"
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* User Info */}
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-green-900/20 border border-green-500/30">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={authState.user?.avatar_url}
+                          alt="Avatar"
+                          className="w-10 h-10 rounded-full"
+                        />
+                        <div>
+                          <p className="font-semibold text-green-400">
+                            Connected as @{authState.user?.login}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {authState.user?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
+
+                    {/* Repository Selection */}
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-300 mb-2 mt-2 flex items-center">
+                        <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                        Select Repository
+                      </label>
+                      {loadingRepos ? (
+                        <div className="p-4 text-center text-gray-400">
+                          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          Loading your repositories...
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedRepo}
+                          onChange={(e) => handleRepoSelect(e.target.value)}
+                          className="w-full px-4 py-4 rounded-xl bg-gray-900/50 border border-gray-700/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
+                        >
+                          <option
+                            value=""
+                            className="bg-gray-900 text-gray-400"
+                          >
+                            Choose a repository...
+                          </option>
+                          {authState.userRepos.map((repo) => (
+                            <option
+                              key={repo.id}
+                              value={repo.full_name}
+                              className="bg-gray-900 text-white"
+                            >
+                              {repo.name} {repo.private ? "🔒" : "📂"} (
+                              {repo.language || "Unknown"})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {authState.userRepos.length === 0 && !loadingRepos && (
+                        <p className="mt-2 text-sm text-gray-400">
+                          No repositories found
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Manual URL Input */}
+            {inputMethod === "manual" && (
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                  GitHub Repository URL
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="https://github.com/username/repository"
+                    value={repoUrl}
+                    onChange={(e) => setRepoUrl(e.target.value)}
+                    className="w-full px-4 py-4 pl-12 rounded-xl bg-gray-900/50 border border-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
+                  />
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Question Input - Same for both methods */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
                 <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
@@ -161,7 +441,11 @@ function QueryPage() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={loading || !repoUrl.trim() || !question.trim()}
+              disabled={
+                loading ||
+                !question.trim() ||
+                (inputMethod === "github" ? !selectedRepo : !repoUrl.trim())
+              }
               className="group relative w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-blue-500/25"
             >
               <span className="relative z-10 flex items-center justify-center">
