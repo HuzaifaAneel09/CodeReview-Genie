@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function QueryPage() {
   const [repoUrl, setRepoUrl] = useState("");
@@ -18,6 +19,8 @@ function QueryPage() {
   const [inputMethod, setInputMethod] = useState("github"); // 'github' | 'manual'
   const [loadingAuth, setLoadingAuth] = useState(false);
   const [loadingRepos, setLoadingRepos] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleGitHubAuth = () => {
     setLoadingAuth(true);
@@ -221,7 +224,10 @@ function QueryPage() {
               </p>
             </div>
           </div>
-          <button className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors">
+          <button
+            onClick={() => navigate("/")}
+            className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors"
+          >
             ← Back to Home
           </button>
         </div>
