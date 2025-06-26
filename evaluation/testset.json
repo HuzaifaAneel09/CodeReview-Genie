@@ -248,7 +248,7 @@
         "author": "Tal Salmona"
       },
       {
-        "message": "Trying to add FPM as a gem dependency.\nThis is a bit odd since I'm not sure in whic order travis-ci will interepert this since it's a Java project.",
+        "message": "trying to add fpm as a gem dependency. this is a bit odd since i'm not sure in which order travis-ci will interpret this since it's a java project. (by tal salmona)",
         "author": "Tal Salmona"
       },
       {
