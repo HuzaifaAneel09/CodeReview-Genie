@@ -1,0 +1,346 @@
+[
+  {
+    "repo": "kenshoo/python-style-guide",
+    "total_commits": 20,
+    "commits": [
+      {
+        "message": "added ex.txt first change committed",
+        "author": "Akanksha Patel"
+      },
+      {
+        "message": "change buddha",
+        "author": "Buddhadeb"
+      },
+      {
+        "message": "new html",
+        "author": "Buddhadeb"
+      },
+      {
+        "message": "Update index.html",
+        "author": "Buddhadeb Khatua"
+      },
+      {
+        "message": "Create newfile",
+        "author": "anikredngold"
+      },
+      {
+        "message": "Create e",
+        "author": "anikredngold"
+      },
+      {
+        "message": "Create newfile",
+        "author": "anikredngold"
+      },
+      {
+        "message": "Create pullrequest",
+        "author": "anikredngold"
+      },
+      {
+        "message": "Create dsfsdf",
+        "author": "anikredngold"
+      },
+      {
+        "message": "new file",
+        "author": "DEEPAK KUMAR YADAV"
+      },
+      {
+        "message": "new changes",
+        "author": "DEEPAK KUMAR YADAV"
+      },
+      {
+        "message": "new commit 1",
+        "author": "DEEPAK KUMAR YADAV"
+      },
+      {
+        "message": "Create Index.html",
+        "author": "Siva"
+      },
+      {
+        "message": "Create signout.html",
+        "author": "Siva"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Eyal Stoler"
+      }
+    ]
+  },
+  {
+    "repo": "MrB141107/Hacktoberfest_2022",
+    "total_commits": 1,
+    "commits": [
+      {
+        "message": "fix(alarm): correct time validation for alarm setup",
+        "author": "Alessandro de'Rossi"
+      }
+    ]
+  },
+  {
+    "repo": "barchart/common-node-js",
+    "total_commits": 3,
+    "commits": [
+      {
+        "message": "Bump socket.io from 2.3.0 to 2.4.0\n\nBumps [socket.io](https://github.com/socketio/socket.io) from 2.3.0 to 2.4.0.\n- [Release notes](https://github.com/socketio/socket.io/releases)\n- [Changelog](https://github.com/socketio/socket.io/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/socketio/socket.io/compare/2.3.0...2.4.0)\n\n---\nupdated-dependencies:\n- dependency-name: socket.io\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump express-handlebars from 3.0.0 to 5.3.1\n\nBumps [express-handlebars](https://github.com/express-handlebars/express-handlebars) from 3.0.0 to 5.3.1.\n- [Release notes](https://github.com/express-handlebars/express-handlebars/releases)\n- [Changelog](https://github.com/express-handlebars/express-handlebars/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/express-handlebars/express-handlebars/compare/v3.0.0...v5.3.1)\n\n---\nupdated-dependencies:\n- dependency-name: express-handlebars\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump xml2js from 0.4.17 to 0.5.0\n\nBumps [xml2js](https://github.com/Leonidas-from-XIV/node-xml2js) from 0.4.17 to 0.5.0.\n- [Commits](https://github.com/Leonidas-from-XIV/node-xml2js/compare/0.4.17...0.5.0)\n\n---\nupdated-dependencies:\n- dependency-name: xml2js\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      }
+    ]
+  },
+  {
+    "repo": "barchart/documentation-generator",
+    "total_commits": 8,
+    "commits": [
+      {
+        "message": "Bump minimist from 1.2.5 to 1.2.8\n\nBumps [minimist](https://github.com/minimistjs/minimist) from 1.2.5 to 1.2.8.\n- [Release notes](https://github.com/minimistjs/minimist/releases)\n- [Changelog](https://github.com/minimistjs/minimist/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/minimistjs/minimist/compare/v1.2.5...v1.2.8)\n\n---\nupdated-dependencies:\n- dependency-name: minimist\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump http-cache-semantics from 4.1.0 to 4.1.1\n\nBumps [http-cache-semantics](https://github.com/kornelski/http-cache-semantics) from 4.1.0 to 4.1.1.\n- [Release notes](https://github.com/kornelski/http-cache-semantics/releases)\n- [Commits](https://github.com/kornelski/http-cache-semantics/compare/v4.1.0...v4.1.1)\n\n---\nupdated-dependencies:\n- dependency-name: http-cache-semantics\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump json5 from 2.2.0 to 2.2.3\n\nBumps [json5](https://github.com/json5/json5) from 2.2.0 to 2.2.3.\n- [Release notes](https://github.com/json5/json5/releases)\n- [Changelog](https://github.com/json5/json5/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/json5/json5/compare/v2.2.0...v2.2.3)\n\n---\nupdated-dependencies:\n- dependency-name: json5\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump json-pointer from 0.6.1 to 0.6.2\n\nBumps [json-pointer](https://github.com/manuelstofer/json-pointer) from 0.6.1 to 0.6.2.\n- [Release notes](https://github.com/manuelstofer/json-pointer/releases)\n- [Commits](https://github.com/manuelstofer/json-pointer/commits)\n\n---\nupdated-dependencies:\n- dependency-name: json-pointer\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump decode-uri-component from 0.2.0 to 0.2.2\n\nBumps [decode-uri-component](https://github.com/SamVerschueren/decode-uri-component) from 0.2.0 to 0.2.2.\n- [Release notes](https://github.com/SamVerschueren/decode-uri-component/releases)\n- [Commits](https://github.com/SamVerschueren/decode-uri-component/compare/v0.2.0...v0.2.2)\n\n---\nupdated-dependencies:\n- dependency-name: decode-uri-component\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump swagger-ui-dist from 3.51.1 to 4.1.3\n\nBumps [swagger-ui-dist](https://github.com/swagger-api/swagger-ui) from 3.51.1 to 4.1.3.\n- [Release notes](https://github.com/swagger-api/swagger-ui/releases)\n- [Commits](https://github.com/swagger-api/swagger-ui/compare/v3.51.1...v4.1.3)\n\n---\nupdated-dependencies:\n- dependency-name: swagger-ui-dist\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump prismjs from 1.25.0 to 1.27.0\n\nBumps [prismjs](https://github.com/PrismJS/prism) from 1.25.0 to 1.27.0.\n- [Release notes](https://github.com/PrismJS/prism/releases)\n- [Changelog](https://github.com/PrismJS/prism/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/PrismJS/prism/compare/v1.25.0...v1.27.0)\n\n---\nupdated-dependencies:\n- dependency-name: prismjs\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      },
+      {
+        "message": "Bump node-fetch from 2.6.1 to 2.6.7\n\nBumps [node-fetch](https://github.com/node-fetch/node-fetch) from 2.6.1 to 2.6.7.\n- [Release notes](https://github.com/node-fetch/node-fetch/releases)\n- [Commits](https://github.com/node-fetch/node-fetch/compare/v2.6.1...v2.6.7)\n\n---\nupdated-dependencies:\n- dependency-name: node-fetch\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+        "author": "dependabot[bot]"
+      }
+    ]
+  },
+  {
+    "repo": "sereneblue/awesome-oss",
+    "total_commits": 4,
+    "commits": [
+      {
+        "message": "Add Telert",
+        "author": "Mihir Khandekar"
+      },
+      {
+        "message": "Update README.md\n\nupdate Zen browser contributing link",
+        "author": "theoneand33"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Jatin Garg"
+      },
+      {
+        "message": "Add crypt.fyi",
+        "author": "dillonstreator"
+      }
+    ]
+  },
+  {
+    "repo": "kenshoo/metrics-play",
+    "total_commits": 15,
+    "commits": [
+      {
+        "message": "Create file1",
+        "author": "vinaykumar485"
+      },
+      {
+        "message": "Project compiles after changing http to https for repositories\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "Do not want cross compilation for archaic versions of scala\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "Migrated to scala play 3 and pekko\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "io.dropwizard.metrics updated to 4.2.27\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "scala updated to 2.13.14\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "Module version is now 0.9.0-SNAPSHOT (3.0.5_0.9.0-SNAPSHOT)\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "README.md update\n\nSigned-off-by: Grzegorz Kazior <Grzegorz.Kazior@comarch.com>",
+        "author": "Grzegorz Kazior"
+      },
+      {
+        "message": "Migrated project to use Micrometer",
+        "author": "Rabina"
+      },
+      {
+        "message": "Removed DropWizard Dependency & Fixed scala 2.13 bug with MetricsFilterSpec",
+        "author": "Rabina"
+      },
+      {
+        "message": "Convert metricsFilter to use dimensional metrics",
+        "author": "Rabina"
+      },
+      {
+        "message": "Update README.md",
+        "author": "Rabina"
+      },
+      {
+        "message": "Add support for other metric types in json",
+        "author": "Rabina"
+      },
+      {
+        "message": "Add duration units to other time based metrics",
+        "author": "Rabina"
+      },
+      {
+        "message": "upgrade to latest play and scala",
+        "author": "Dominik Zeiger"
+      }
+    ]
+  },
+  {
+    "repo": "kenshoo/gradle-fpm-plugin",
+    "total_commits": 3,
+    "commits": [
+      {
+        "message": "Add travis-ci.org build",
+        "author": "Tal Salmona"
+      },
+      {
+        "message": "trying to add fpm as a gem dependency. this is a bit odd since i'm not sure in which order travis-ci will interpret this since it's a java project. (by tal salmona)",
+        "author": "Tal Salmona"
+      },
+      {
+        "message": "And now after running \"bundle package\" to embed the gems in the project",
+        "author": "Tal Salmona"
+      }
+    ]
+  },
+  {
+    "repo": "kenshoo/swagger-validator",
+    "total_commits": 6,
+    "commits": [
+      {
+        "message": "Update build.gradle",
+        "author": "Miki Manor"
+      },
+      {
+        "message": "\"Gradle:Upgrade-to-latest-version(5.4.1)\"",
+        "author": "kenshoo-build"
+      },
+      {
+        "message": "Verify if combination of (method) path and operation exists",
+        "author": "Roy Willemse"
+      },
+      {
+        "message": "swagger-validator: implement mime validator",
+        "author": "Michael Pasternak"
+      },
+      {
+        "message": "swagger-validator: use generic HttpMethod annotation\n\nwe should identify jax-rs methods using HttpMethod rather\nthan specific GET/POST/etc.",
+        "author": "Michael Pasternak"
+      },
+      {
+        "message": "swagger-validator: use known methods rather check all annotations",
+        "author": "Michael Pasternak"
+      }
+    ]
+  },
+  {
+    "repo": "kenshoo/file-format-streaming-converter",
+    "total_commits": 10,
+    "commits": [
+      {
+        "message": "Update CellDataHandler.java",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "check_code_guru",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "version of configure-aws-credentials 1.5.11",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "empty line",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "remove env",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "trigger build",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "trigger build2",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "trigger build3",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "Update BooleanCellDataHandler.java",
+        "author": "shlomi klein"
+      },
+      {
+        "message": "Update BooleanCellDataHandler.java",
+        "author": "shlomi klein"
+      }
+    ]
+  },
+  {
+    "repo": "kenshoo/openstack-ansible",
+    "total_commits": 1,
+    "commits": [
+      {
+        "message": "pydetective results",
+        "author": "kenshoo-build"
+      }
+    ]
+  }
+]
