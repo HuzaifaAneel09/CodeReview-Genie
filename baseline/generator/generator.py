@@ -60,6 +60,15 @@ def ask_query(index, query: str, token_counter: TokenCountingHandler):
         for i, node in enumerate(retrieved_nodes):
             print(f"\n--- Chunk #{i+1} ---\n{node.text}\n")
 
+        chunks_data = []
+        for i, node in enumerate(retrieved_nodes):
+            chunks_data.append({
+                "chunk_number": i + 1,
+                "content": node.text,
+                "score": getattr(node, 'score', None)
+            })
+            print(f"\n--- Chunk #{i+1} ---\n{node.text}\n")    
+
         # Run the actual query
         response = query_engine.query(query)
 
@@ -70,7 +79,7 @@ def ask_query(index, query: str, token_counter: TokenCountingHandler):
         cost_usd = (prompt_tokens * 0.0001 + completion_tokens * 0.0004)
 
         logger.info(f"Tokens used -> prompt: {prompt_tokens}, completion: {completion_tokens}, total: {total_tokens}")
-        return str(response), total_tokens, cost_usd
+        return str(response), total_tokens, cost_usd, chunks_data
 
     except Exception as e:
         logger.error(f"Error while querying GPT: {e}", exc_info=True)

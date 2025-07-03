@@ -61,7 +61,7 @@ def query(input: QueryInput):
         index, token_counter = build_index_from_github(owner, repo)
 
         logger.info(f"[{request_id}] Asking question: {input.question}")
-        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        answer, token_count, cost_usd, chunks = ask_query(index, input.question, token_counter)
         embedding_tokens = token_counter.total_embedding_token_count
 
         duration = round(time.time() - start_time, 2)
@@ -85,6 +85,7 @@ def query(input: QueryInput):
             "embedding_tokens": embedding_tokens,
             "tokens_total": token_count + embedding_tokens,
             "estimated_cost_usd": round(cost_usd, 6),
+            "retrieved_chunks": chunks
         }
 
     except Exception as e:
@@ -324,7 +325,7 @@ def query_with_auth(input: AuthQueryInput):
             access_token=input.access_token
         )
         
-        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        answer, token_count, cost_usd, chunks = ask_query(index, input.question, token_counter)
         embedding_tokens = token_counter.total_embedding_token_count
 
         duration = round(time.time() - start_time, 2)
@@ -349,6 +350,7 @@ def query_with_auth(input: AuthQueryInput):
             "embedding_tokens": embedding_tokens,
             "tokens_total": token_count + embedding_tokens,
             "estimated_cost_usd": round(cost_usd, 6),
+            "retrieved_chunks": chunks
         }
 
     except Exception as e:
