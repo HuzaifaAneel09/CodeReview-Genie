@@ -78,31 +78,63 @@ def fetch_and_format(owner: str, repo: str, access_token=None):
         return cached
 
     data = []
-    prs = fetch_pull_requests(owner, repo, access_token=access_token)
+    
+    # Fetch PRs (both open and closed)
+    open_prs = fetch_pull_requests(owner, repo, state="open", per_page=50, access_token=access_token)
+    closed_prs = fetch_pull_requests(owner, repo, state="closed", per_page=50, access_token=access_token)
+    all_prs = open_prs + closed_prs
 
-    if not prs:
+    if not all_prs:
         logger.warning(f"No PRs found for {owner}/{repo}")
         return data
 
-    for pr in prs:
+    for pr in all_prs:
         pr_number = pr["number"]
         title = pr["title"]
         author = pr["user"]["login"]
         body = pr.get("body", "")
+        state = pr["state"]
+        merged = pr.get("merged", False)
+        created_at = pr["created_at"]
+        updated_at = pr["updated_at"]
+        
+        if state == "open":
+            status = "OPEN"
+        elif merged:
+            status = "MERGED"
+        else:
+            status = "CLOSED"
+        
         comments = fetch_comments(owner, repo, pr_number, access_token=access_token)
         commits = fetch_commits(owner, repo, pr_number, access_token=access_token)
 
-        text = f"PR #{pr_number}: {title}\nAuthor: {author}\n{body}\n"
+        text = f"PR #{pr_number}: {title}\n"
+        text += f"Author: {author}\n"
+        text += f"Status: {status}\n"
+        text += f"Created: {created_at}\n"
+        text += f"Updated: {updated_at}\n"
+        if merged:
+            text += f"Merged: Yes\n"
+        text += f"Description: {body}\n"
 
+        # Show ALL commits in this PR (regardless of author)
         text += f"Commits ({len(commits)}):\n"
         for commit in commits:
             msg = commit["commit"]["message"]
-            author = commit["commit"]["author"]["name"]
-            text += f"- {msg} (by {author})\n"
+            commit_author = commit["commit"]["author"]["name"]
+            commit_date = commit["commit"]["author"]["date"]
+            sha = commit["sha"][:7]
+            text += f"- {msg} (by {commit_author} on {commit_date}) [{sha}]\n"
 
-        for comment in comments:
-            commenter = comment["user"]["login"]
-            text += f"Comment by {commenter}: {comment['body']}\n"
+        # Show ALL comments in this PR
+        if comments:
+            text += f"Comments ({len(comments)}):\n"
+            for comment in comments:
+                commenter = comment["user"]["login"]
+                comment_date = comment["created_at"]
+                text += f"Comment by {commenter} on {comment_date}: {comment['body']}\n"
+        else:
+            text += "Comments: None\n"
 
         data.append(text)
     
