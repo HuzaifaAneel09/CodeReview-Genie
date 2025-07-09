@@ -187,6 +187,9 @@ function QueryPage() {
   const exampleQuestions = [
     "How many total PRs are there and what are the statuses of it?",
     "How many total commits are there?",
+    "When was PR # 2 opened? Tell me the date exactly?",
+    "Give me all comments along with total count from my second PR.",
+    "Give me all comments along with total count from my second PR. Also tell what comments were done my me if any and what comments other Authors did?"
   ];
 
   return (
