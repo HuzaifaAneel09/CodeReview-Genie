@@ -190,10 +190,12 @@ def run_single_test(repo: str = Query(...)):
     index, _ = build_index_from_github(owner, name)
 
     question = "List all commit messages from all PRs."
-    response_text, _, _ = ask_query(index, question, token_counter)
+    response_text, _, _, _ = ask_query(index, question, token_counter)
 
     expected = [c["message"].strip().lower() for c in test_entry["commits"]]
     predicted = [line.strip().lower() for line in response_text.strip().splitlines() if line.strip()]
+
+    print('predicted ------', predicted)
 
     matched_count = 0
     unmatched = []
@@ -204,6 +206,7 @@ def run_single_test(repo: str = Query(...)):
             matched_count += 1
         unmatched.append({
             "expected": msg,
+            "predicted": predicted,
             "found": found
         })
 
