@@ -194,19 +194,23 @@ def run_single_test(repo: str = Query(...)):
 
     expected = [c["message"].strip().lower() for c in test_entry["commits"]]
     predicted = [line.strip().lower() for line in response_text.strip().splitlines() if line.strip()]
-
-    print('predicted ------', predicted)
-
+    
     matched_count = 0
     unmatched = []
 
     for msg in expected:
-        found = any(msg in line for line in predicted)
+        matched_predicted_line = None
+        found = False
+        for line in predicted:
+            if msg in line:
+                matched_predicted_line = line
+                found = True
+                break # Found a match, no need to check further for this 'msg'
         if found:
             matched_count += 1
         unmatched.append({
             "expected": msg,
-            "predicted": predicted,
+            "predicted": matched_predicted_line,
             "found": found
         })
 
