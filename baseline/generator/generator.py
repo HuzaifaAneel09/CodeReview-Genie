@@ -40,7 +40,7 @@ If something isn't applicable, write 'Sorry I am unaware of this information.'.
 
 custom_prompt = RichPromptTemplate(prompt_template_str)
 
-def ask_query(index, query: str, token_counter: TokenCountingHandler):
+def ask_query(index, query: str, token_counter: TokenCountingHandler, use_custom_prompt: bool = True):
     logger.info(f"Asking question: {query}")
     try:
         llm = OpenAI(model="gpt-4.1-nano", api_key=os.getenv("OPENAI_API_KEY"), temperature=0)
@@ -48,9 +48,12 @@ def ask_query(index, query: str, token_counter: TokenCountingHandler):
         is_expansive = any(phrase in query.lower() for phrase in EXPANSIVE_QUERY_TRIGGERS)
         top_k = 50 if is_expansive else 5
 
-        response_synthesizer = get_response_synthesizer(text_qa_template=custom_prompt)
+        if use_custom_prompt:
+            response_synthesizer = get_response_synthesizer(text_qa_template=custom_prompt)
+            query_engine = index.as_query_engine(similarity_top_k=top_k, response_synthesizer=response_synthesizer, llm=llm)
+        else:
+            query_engine = index.as_query_engine(similarity_top_k=top_k, llm=llm) # No response_synthesizer
 
-        query_engine = index.as_query_engine(similarity_top_k=top_k, response_synthesizer=response_synthesizer, llm=llm)
         query_engine.callback_manager.add_handler(token_counter)
 
         logger.info(f"Using similarity_top_k={top_k} for this query.")

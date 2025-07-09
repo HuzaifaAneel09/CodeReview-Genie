@@ -189,8 +189,8 @@ def run_single_test(repo: str = Query(...)):
     token_counter = TokenCountingHandler()
     index, _ = build_index_from_github(owner, name)
 
-    question = "List all commit messages from all PRs."
-    response_text, _, _, _ = ask_query(index, question, token_counter)
+    question = "List all commit messages from open PRs."
+    response_text, _, _, _ = ask_query(index, question, token_counter, use_custom_prompt=False)
 
     expected = [c["message"].strip().lower() for c in test_entry["commits"]]
     predicted = [line.strip().lower() for line in response_text.strip().splitlines() if line.strip()]
