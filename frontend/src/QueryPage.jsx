@@ -9,6 +9,8 @@ function QueryPage() {
   const [error, setError] = useState("");
   const [isVisible] = useState(true);
   const [selectedRepo, setSelectedRepo] = useState("");
+  const [retrievedChunks, setRetrievedChunks] = useState(null);
+  const [showChunks, setShowChunks] = useState(false);
 
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
@@ -114,6 +116,8 @@ function QueryPage() {
     setLoading(true);
     setError("");
     setResponse(null);
+    setRetrievedChunks(null); // Reset chunks
+    setShowChunks(false); // Hide chunks panel
 
     try {
       let res;
@@ -152,6 +156,7 @@ function QueryPage() {
         setError(data.error);
       } else {
         setResponse(data.answer);
+        setRetrievedChunks(data.retrieved_chunks); // Store chunks
       }
     } catch (err) {
       setError("Something went wrong: " + err.message);
@@ -180,11 +185,11 @@ function QueryPage() {
   }, []);
 
   const exampleQuestions = [
-    "What are the top commits in this repository?",
+    "How many total PRs are there and what are the statuses of it?",
     "How many total commits are there?",
-    "What are the main contributors?",
-    "What technologies are used in this project?",
-    "What are the recent changes in the last month?",
+    "When was PR # 2 opened? Tell me the date exactly?",
+    "Give me all comments along with total count from my second PR.",
+    "Give me all comments along with total count from my second PR. Also tell what comments were done my me if any and what comments other Authors did?"
   ];
 
   return (
@@ -518,37 +523,165 @@ function QueryPage() {
 
           {/* Response */}
           {response && (
-            <div className="p-6 rounded-xl bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700/50 backdrop-blur-sm animate-fadeIn">
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-sm">🧞</span>
+            <div
+              className={`transition-all duration-300 ${
+                showChunks
+                  ? "grid grid-cols-5 gap-6" // 5-column grid: 2 for response, 3 for chunks
+                  : "grid grid-cols-1"
+              }`}
+            >
+              {/* Response Panel */}
+              <div
+                className={`${
+                  showChunks ? "col-span-2" : "col-span-1"
+                } p-6 rounded-xl bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700/50 backdrop-blur-sm animate-fadeIn`}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
+                    <span className="text-sm">🧞</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-green-400">
+                    Genie's Response
+                  </h3>
+                  <div className="ml-auto flex space-x-2">
+                    {retrievedChunks && (
+                      <button
+                        onClick={() => setShowChunks(!showChunks)}
+                        className={`px-3 py-1 text-sm rounded-lg transition-all duration-300 ${
+                          showChunks
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }`}
+                      >
+                        {showChunks ? "Hide Chunks" : "Show Chunks"}
+                      </button>
+                    )}
+                    <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-green-400">
-                  Genie's Response
-                </h3>
-                <div className="ml-auto flex space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </button>
+                <div className="bg-[#0d1117] rounded-lg p-4 border border-gray-700/30">
+                  <pre className="whitespace-pre-wrap break-words text-gray-200 leading-relaxed font-mono text-sm">
+                    {response}
+                  </pre>
                 </div>
               </div>
-              <div className="bg-[#0d1117] rounded-lg p-4 border border-gray-700/30">
-                <pre className="whitespace-pre-wrap break-words text-gray-200 leading-relaxed font-mono text-sm">
-                  {response}
-                </pre>
-              </div>
+
+              {/* Chunks Panel - Wider and Taller */}
+              {showChunks && retrievedChunks && (
+                <div className="col-span-3 p-6 rounded-xl bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700/50 backdrop-blur-sm animate-fadeIn">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-sm">📋</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-purple-400">
+                      Retrieved Chunks ({retrievedChunks.length})
+                    </h3>
+                    <div className="ml-auto flex space-x-2">
+                      <button
+                        onClick={() =>
+                          navigator.clipboard.writeText(
+                            JSON.stringify(retrievedChunks, null, 2)
+                          )
+                        }
+                        className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50"
+                        title="Copy JSON"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setShowChunks(false)}
+                        className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700/50"
+                        title="Close Chunks"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Better formatted chunks display */}
+                  <div className="bg-[#0d1117] rounded-lg border border-gray-700/30 h-[70vh] overflow-y-auto">
+                    <div className="p-4 space-y-6">
+                      {retrievedChunks.map((chunk, index) => (
+                        <div
+                          key={index}
+                          className="border-b border-gray-700/30 pb-4 last:border-b-0"
+                        >
+                          <div className="flex items-center mb-2">
+                            <span className="text-purple-400 font-semibold text-sm">
+                              Chunk #{chunk.chunk_number}
+                            </span>
+                            {chunk.score && (
+                              <span className="ml-2 text-xs bg-purple-600/20 text-purple-300 px-2 py-1 rounded">
+                                Score: {chunk.score?.toFixed(3)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="bg-gray-800/30 rounded p-4 border border-gray-600/30">
+                            <pre className="whitespace-pre-wrap break-words text-gray-200 text-sm leading-relaxed font-mono">
+                              {chunk.content}
+                            </pre>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Raw JSON toggle */}
+                  <div className="mt-4">
+                    <details className="group">
+                      <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300 transition-colors">
+                        <span className="group-open:rotate-90 inline-block transition-transform mr-1">
+                          ▶
+                        </span>
+                        View Raw JSON
+                      </summary>
+                      <div className="mt-2 bg-gray-800/50 rounded p-3 border border-gray-600/30">
+                        <pre className="text-xs text-gray-300 leading-relaxed max-h-40 overflow-y-auto">
+                          {JSON.stringify(retrievedChunks, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

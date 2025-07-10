@@ -61,7 +61,7 @@ def query(input: QueryInput):
         index, token_counter = build_index_from_github(owner, repo)
 
         logger.info(f"[{request_id}] Asking question: {input.question}")
-        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        answer, token_count, cost_usd, chunks = ask_query(index, input.question, token_counter)
         embedding_tokens = token_counter.total_embedding_token_count
 
         duration = round(time.time() - start_time, 2)
@@ -71,6 +71,8 @@ def query(input: QueryInput):
             "request_id": request_id,
             "repo_url": input.repo_url,
             "question": input.question,
+            "answer": answer,
+            "retrieved_chunks": chunks,
             "embedding_tokens": embedding_tokens,
             "llm_tokens": token_count,
             "tokens_total": token_count + embedding_tokens,
@@ -85,6 +87,7 @@ def query(input: QueryInput):
             "embedding_tokens": embedding_tokens,
             "tokens_total": token_count + embedding_tokens,
             "estimated_cost_usd": round(cost_usd, 6),
+            "retrieved_chunks": chunks
         }
 
     except Exception as e:
@@ -188,21 +191,28 @@ def run_single_test(repo: str = Query(...)):
     token_counter = TokenCountingHandler()
     index, _ = build_index_from_github(owner, name)
 
-    question = "List all commit messages from all PRs."
-    response_text, _, _ = ask_query(index, question, token_counter)
+    question = "List all commit messages from open PRs."
+    response_text, _, _, _ = ask_query(index, question, token_counter, use_custom_prompt=False)
 
     expected = [c["message"].strip().lower() for c in test_entry["commits"]]
     predicted = [line.strip().lower() for line in response_text.strip().splitlines() if line.strip()]
-
+    
     matched_count = 0
     unmatched = []
 
     for msg in expected:
-        found = any(msg in line for line in predicted)
+        matched_predicted_line = None
+        found = False
+        for line in predicted:
+            if msg in line:
+                matched_predicted_line = line
+                found = True
+                break # Found a match, no need to check further for this 'msg'
         if found:
             matched_count += 1
         unmatched.append({
             "expected": msg,
+            "predicted": matched_predicted_line,
             "found": found
         })
 
@@ -324,7 +334,7 @@ def query_with_auth(input: AuthQueryInput):
             access_token=input.access_token
         )
         
-        answer, token_count, cost_usd = ask_query(index, input.question, token_counter)
+        answer, token_count, cost_usd, chunks = ask_query(index, input.question, token_counter)
         embedding_tokens = token_counter.total_embedding_token_count
 
         duration = round(time.time() - start_time, 2)
@@ -334,6 +344,8 @@ def query_with_auth(input: AuthQueryInput):
             "request_id": request_id,
             "repo_url": f"{input.owner}/{input.repo}",
             "question": input.question,
+            "answer": answer,
+            "retrieved_chunks": chunks,
             "embedding_tokens": embedding_tokens,
             "llm_tokens": token_count,
             "tokens_total": token_count + embedding_tokens,
@@ -349,6 +361,7 @@ def query_with_auth(input: AuthQueryInput):
             "embedding_tokens": embedding_tokens,
             "tokens_total": token_count + embedding_tokens,
             "estimated_cost_usd": round(cost_usd, 6),
+            "retrieved_chunks": chunks
         }
 
     except Exception as e:
