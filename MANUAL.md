@@ -30,8 +30,8 @@ Make sure you have the following installed on your system:
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
-    cd <repository-folder>
+    git clone https://github.com/HuzaifaAneel09/CodeReview-Genie
+    cd CodeReview-Genie
     ```
 
 2.  **Create a virtual environment and install dependencies:**

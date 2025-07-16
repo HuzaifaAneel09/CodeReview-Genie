@@ -57,8 +57,8 @@ Follow these instructions to set up and run the project on your local machine.
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
-    cd <repository-folder>
+    git clone https://github.com/HuzaifaAneel09/CodeReview-Genie
+    cd CodeReview-Genie
     ```
 
 2.  **Create a virtual environment and install dependencies:**
@@ -106,6 +106,12 @@ Follow these instructions to set up and run the project on your local machine.
 2.  Enter the URL of a public GitHub repository you want to analyze.
 3.  To analyze a private repository, click the "Login with GitHub" button to authenticate.
 4.  Once the repository is loaded, ask a question in the input box and get your answer!
+
+---
+
+### 📖 Documentation
+
+* 👉 [User Manual](./MANUAL.md) — Detailed usage guide and advanced instructions.
 
 ---
 
